@@ -1,0 +1,37 @@
+<script type="text/javascript" charset="utf-8">
+
+window.addEventListener('message', onMsg, false);
+function onMsg(ev) {
+  console.log('Received message');
+  var labeledObject = ev.data;
+  fetchRules(function(rules) {
+    console.log('Received rules');
+    var passwordStrength = rankPassword(labeledObject.protectedObject, rules);
+    console.log('Ranked password');
+    ev.source.postMessage(passwordStrength, ev.origin);
+  });
+}
+
+function fetchRules(cb) {
+  // fetch rules for password
+  fetch('http://untrusted.com:3000/rules')
+    .then(function(res) {
+      return res.json();
+    }).then(cb);
+}
+
+function rankPassword(data, rules) {
+  var password = data.password;
+  var score = 0;
+
+  Object.keys(rules).forEach(function(ruleKey) {
+    var pattern = new RegExp(rules[ruleKey]);
+
+    // add 10 points for every matched rule
+    if (pattern.test(password)) score += 10;
+  });
+
+  return score;
+}
+
+</script>
